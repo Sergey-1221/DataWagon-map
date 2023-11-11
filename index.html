@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+    <script src="https://api-maps.yandex.ru/v3/?apikey=8075fa8b-3f29-4340-83b3-7d7de2206533&lang=en_US" type="text/javascript"></script>
+
+    <script>
+      window.map = null;
+
+      main();
+      async function main() {
+        await ymaps3.ready;
+        const {YMap, YMapDefaultSchemeLayer, YMapFeature, YMapDefaultFeaturesLayer, YMapControls, YMapMarker, YMapFeatureDataSource, YMapLayer} = ymaps3;
+
+        const {YMapZoomControl} = await ymaps3.import('@yandex/ymaps3-controls@0.0.1');
+        const {YMapDefaultMarker} = await ymaps3.import('@yandex/ymaps3-markers@0.0.1');
+
+        const LOCATION = {center: [34.17602777105381, 45.14127320756063], zoom: 14};
+        map = new YMap(document.getElementById('app'), {
+          location: LOCATION,
+          zoomRange: {min: 8, max: 16}
+        });
+
+        map.addChild((scheme = new YMapDefaultSchemeLayer()));
+        map.addChild(new YMapControls({position: 'right'}).addChild(new YMapZoomControl({})));
+
+
+        map.addChild(new YMapDefaultSchemeLayer());
+        map.addChild(new YMapDefaultFeaturesLayer());
+
+
+        map.addChild(new YMapFeatureDataSource({id: 'popups'}));
+        map.addChild(new YMapLayer({source: 'popups'}));
+        /*
+        const POLYLINE1 = {
+				  id: 'one',
+				  draggable: true,
+				  geometry: {
+				    type: 'LineString',
+				    coordinates: [
+				      // Specify the coordinates of the vertices of the polyline.
+				      [37.5, 55.7],
+				      [37.4, 55.8],
+				      [37.5, 55.8],
+				      [37.4, 55.7]
+				    ]
+				  },
+				  style: {stroke: [{color: '#f00', width: 4}]}
+				};
+
+				const POLYLINE2 = {
+				  id: 'second',
+				  geometry: {
+				    type: 'LineString',
+				    coordinates: [
+				      // Specify the coordinates of the vertices of the polyline.
+				      [37.4, 55.8],
+				      [37.5, 55.9],
+				      [37.5, 55.8],
+				      [37.4, 55.9]
+				    ]
+				  },
+				  style: {stroke: [{color: '#ffff00', width: 5}]}
+				};
+				map.addChild(new YMapFeature(POLYLINE1));
+				map.addChild(new YMapFeature(POLYLINE2));
+        */      
+        
+        for (let i = 1; i < 2; i++) {
+				  let json_point = await (await fetch('http://178.20.45.28/railway_wish_card/stations/'+i)).json();
+	        //const json_point = await (await fetch('sample1500.json')).json();
+	        json_point["metadata"].forEach((element) => {
+	        	let rightPopupContent = (close) => {
+		          const container = document.createElement('div');
+		          container.innerHTML = `<div class="popup">
+		                    <button class="popup__close">✖</button>
+		                    <div class="popup_content">
+			                    <img class="right-popup__img" src="./img/flower.svg">
+			                    <p>Flowers studio</p>
+			                    <button class="right-popup__accept">Read more</button>
+		                    </div>
+		                </div>`;
+		          container.querySelector('.popup__close').onclick = close;
+
+		          return container;
+		        };
+
+	        	let MARKER_POPUP = {
+		          content: rightPopupContent,
+		          position: 'right'
+		        };
+	        	//console.log(element);
+	        	let el = document.createElement('img');
+		        el.className = 'my-marker';
+		        el.src = './pin.svg';
+		        map.addChild(new YMapDefaultMarker({
+		        	coordinates: [element.coordinates[1], element.coordinates[0]], 
+		        	hideOutsideViewport: true, 
+		        	color: 'red',
+		        	popup: MARKER_POPUP
+		        }, el));
+
+	        });
+				}
+			
+        
+
+
+        /*
+        const json_point_1 = await (await fetch('sample5000.json')).json();
+        
+        json_point_1.forEach((element) => {
+        	//console.log(element);
+        	let el = document.createElement('img');
+	        el.className = 'my-marker';
+	        el.src = './pin.svg';
+	        map.addChild(new YMapMarker({coordinates: [element.coordinates[1], element.coordinates[0]], hideOutsideViewport: true}, el));
+
+        });*/
+      }
+    </script>
+
+    <!-- prettier-ignore -->
+    <style> html, body, #app { width: 100%; height: 100%; margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; } .toolbar { position: absolute; z-index: 1000; top: 0; left: 0; display: flex; align-items: center; padding: 16px; } .toolbar a { padding: 16px; }  </style>
+    <style type="text/css">
+    	
+    	.my-marker {
+		  position: relative;
+		  box-sizing: border-box;
+		  transform: translate(-50%, calc(-50% - 24px));
+		  cursor: pointer;
+		}
+
+			.popup{
+				width: 400px;
+				height: 600px;
+				background: #ffffff;
+				box-shadow: 0 0 10px rgba(0,0,0,0.5);
+				border-radius: 15px;
+			}
+			
+
+			.popup__close {
+			  align-self: flex-end;
+			  float: right;
+			  width: 30px;
+
+			  font-size: 20px;
+			  cursor: pointer;
+
+			  color: #c0c5cb;
+			  border: none;
+			  background-color: transparent;
+			}
+
+			.popup_content{
+				padding: 25px 15px;
+			}
+			.menu{
+				position: fixed;
+				margin-top: 10px;
+				margin-left: 15px;
+				z-index: 100;
+				background: #ffffff;
+				box-shadow: 0 0 10px rgba(0,0,0,0.5);
+				border-radius: 15px;
+				min-width: 300px;
+				min-height: 100px;
+			}
+			.search{
+				margin-top: 10px;
+				margin-left: 15px;
+			}
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+
+</html>
